@@ -22,6 +22,15 @@ type GreetingOutput struct {
 	}
 }
 
+// ReviewInput represents the review operation request.
+type ReviewInput struct {
+	Body struct {
+		Author  string `json:"author" maxLength:"10" doc:"Author of the review"`
+		Rating  int    `json:"rating" minimum:"1" maximum:"5" doc:"Rating from 1 to 5"`
+		Message string `json:"message,omitempty" maxLength:"100" doc:"Review message"`
+	}
+}
+
 func main() {
 	// Create a CLI app which takes a port option.
 	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
@@ -29,7 +38,7 @@ func main() {
 		router := http.NewServeMux()
 		api := humago.New(router, huma.DefaultConfig("My API", "1.0.0"))
 
-		// Add the operation handler to the API.
+		// Register GET /greeting/{name}
 		huma.Register(api, huma.Operation{
 			OperationID: "get-greeting",
 			Method:      http.MethodGet,
@@ -43,6 +52,19 @@ func main() {
 			resp := &GreetingOutput{}
 			resp.Body.Message = fmt.Sprintf("Hello, %s!", input.Name)
 			return resp, nil
+		})
+
+		// Register POST /reviews
+		huma.Register(api, huma.Operation{
+			OperationID:   "post-review",
+			Method:        http.MethodPost,
+			Path:          "/reviews",
+			Summary:       "Post a review",
+			Tags:          []string{"Reviews"},
+			DefaultStatus: http.StatusCreated,
+		}, func(ctx context.Context, i *ReviewInput) (*struct{}, error) {
+			// TODO: save review in data store.
+			return nil, nil
 		})
 
 		// Tell the CLI how to start your server.
