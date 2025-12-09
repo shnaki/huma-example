@@ -6,10 +6,10 @@ import (
 	"net/http"
 
 	"github.com/danielgtaylor/huma/v2"
-	"github.com/danielgtaylor/huma/v2/adapters/humago"
-	"github.com/danielgtaylor/huma/v2/humacli"
-
+	"github.com/danielgtaylor/huma/v2/adapters/humachi"
 	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
+	"github.com/danielgtaylor/huma/v2/humacli"
+	"github.com/go-chi/chi/v5"
 )
 
 // Options for the CLI.
@@ -68,8 +68,8 @@ func main() {
 	// Create a CLI app which takes a port option.
 	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
 		// Create a new router & API
-		router := http.NewServeMux()
-		api := humago.New(router, huma.DefaultConfig("My API", "1.0.0"))
+		router := chi.NewMux()
+		api := humachi.New(router, huma.DefaultConfig("My API", "1.0.0"))
 
 		addRoutes(api)
 
