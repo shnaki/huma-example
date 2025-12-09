@@ -7,9 +7,11 @@ import (
 
 	"github.com/danielgtaylor/huma/v2"
 	"github.com/danielgtaylor/huma/v2/adapters/humachi"
-	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 	"github.com/danielgtaylor/huma/v2/humacli"
 	"github.com/go-chi/chi/v5"
+	"github.com/spf13/cobra"
+
+	_ "github.com/danielgtaylor/huma/v2/formats/cbor"
 )
 
 // Options for the CLI.
@@ -65,11 +67,13 @@ func addRoutes(api huma.API) {
 }
 
 func main() {
+	var api huma.API
+
 	// Create a CLI app which takes a port option.
 	cli := humacli.New(func(hooks humacli.Hooks, options *Options) {
 		// Create a new router & API
 		router := chi.NewMux()
-		api := humachi.New(router, huma.DefaultConfig("My API", "1.0.0"))
+		api = humachi.New(router, huma.DefaultConfig("My API", "1.0.0"))
 
 		addRoutes(api)
 
@@ -78,6 +82,18 @@ func main() {
 			fmt.Printf("Starting server on port %d...\n", options.Port)
 			http.ListenAndServe(fmt.Sprintf(":%d", options.Port), router)
 		})
+	})
+
+	// Add a command to print the OpenAPI spec.
+	cli.Root().AddCommand(&cobra.Command{
+		Use:   "openapi",
+		Short: "Print the OpenAPI spec",
+		Run: func(cmd *cobra.Command, args []string) {
+			// Use downgrade to return OpenAPI 3.0.3 YAML since oapi-codegen doesn't
+			// support OpenAPI 3.1 fully yet. Use `.YAML()` instead for 3.1.
+			b, _ := api.OpenAPI().DowngradeYAML()
+			fmt.Println(string(b))
+		},
 	})
 
 	// Run the CLI. When passed no commands, it starts the server.
