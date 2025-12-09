@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"strings"
 	"testing"
 
@@ -13,6 +14,20 @@ func TestGetGreeting(t *testing.T) {
 	addRoutes(api)
 
 	resp := api.Get("/greeting/world")
+	s := resp.Body.String()
+	if !strings.Contains(s, "Hello, world!") {
+		t.Fatalf("Unexpected response: %s", s)
+	}
+}
+
+func TestGetGreetingContext(t *testing.T) {
+	_, api := humatest.New(t)
+
+	addRoutes(api)
+
+	ctx := context.Background() // define your necessary context
+
+	resp := api.GetCtx(ctx, "/greeting/world") // provide it using the 'Ctx' suffixed methods
 	if !strings.Contains(resp.Body.String(), "Hello, world!") {
 		t.Fatalf("Unexpected response: %s", resp.Body.String())
 	}
